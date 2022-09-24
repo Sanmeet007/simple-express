@@ -1,3 +1,5 @@
+// TODO implement the famous parser for requests and files ... Also implement the :id thing
+
 import express from "./lib/express.js";
 
 const app = express();
@@ -7,6 +9,15 @@ app.setViewsDir("views");
 app.get("/", (req, res) => {
   return res.renderFile("index", {
     tool: "EJS",
+    string: "",
+  });
+});
+
+app.get("/:string", (req, res) => {
+  const string = req.params.string;
+  return res.renderFile("index", {
+    tool: "EJS",
+    string,
   });
 });
 
