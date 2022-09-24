@@ -19,12 +19,11 @@ app.post("/", (req, res) => {
 
 app.use((req, res) => {
   if (req.method != "POST" && req.method != "GET") return res.error(501);
-  else {
-  }
+  else return res.error(404);
 });
 
 app.error(404, (_, res) => {
-  return res.renderFile("public/404.html");
+  return res.sendFile("public/404.html");
 });
 
 app.listen(2000);
