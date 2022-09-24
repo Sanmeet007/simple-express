@@ -18,8 +18,9 @@ app.post("/", (req, res) => {
 });
 
 app.use((req, res) => {
-  if (req.method != "POST" || req.method != "GET") return res.error(501);
-  else return res.error(404);
+  if (req.method != "POST" && req.method != "GET") return res.error(501);
+  else {
+  }
 });
 
 app.error(404, (_, res) => {
