@@ -6,7 +6,7 @@ app.setViewsDir("views");
 
 app.get("/", (req, res) => {
   return res.renderFile("index", {
-    val: 10,
+    tool: "EJS",
   });
 });
 
@@ -23,7 +23,7 @@ app.use((req, res) => {
 });
 
 app.error(404, (_, res) => {
-  return res.sendFile("public/404.html");
+  return res.renderFile("public/404.html");
 });
 
 app.listen(2000);
