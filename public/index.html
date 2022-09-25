@@ -22,9 +22,26 @@
       tempore minus earum obcaecati, error, voluptas suscipit similique ea
       culpa. Iure, repellendus!
     </p>
-    <form action="/" method="GET">
-      <input type="text" name="fname" />
-      <input type="text" name="lname" />
+    <h1>Post forms</h1>
+    <form action="/" method="POST">
+      <h2>POST form</h2>
+      <input type="text" name="text" value="Some text" />
+      <input type="text" name="text2" value="Some text" />
+      <button type="submit">SUBMIT</button>
+    </form>
+    <br />
+    <form action="/" method="POST" enctype="text/plain">
+      <h2>Plain form</h2>
+      <input type="text" name="text" value="Some text" />
+      <input type="text" name="text2" value="Some text" />
+      <button type="submit">SUBMIT</button>
+    </form>
+    <br />
+    <form action="/" method="POST" enctype="multipart/form-data">
+      <h2>POST with file</h2>
+      <input type="text" name="fname" value="Sanmeet" />
+      <input type="text" name="lname" value="Singh" />
+      <input type="file" name="file" multiple />
       <button type="submit">SUBMIT</button>
     </form>
   </body>

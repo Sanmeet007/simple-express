@@ -1,6 +1,7 @@
 // TODO implement the files
 
 import express from "./lib/express.js";
+import bodyParser from "./lib/body.js";
 
 const app = express();
 app.setStatic("public");
@@ -24,14 +25,7 @@ app.get("/:string", (req, res) => {
 });
 
 app.post("/", async (req, res) => {
-  const data = await req.body;
-  console.log("POST data : ", data);
   return res.redirect("/");
-});
-
-app.use((req, res) => {
-  if (req.method != "POST" && req.method != "GET") return res.error(501);
-  else return res.error(404);
 });
 
 app.error(404, (_, res) => {
