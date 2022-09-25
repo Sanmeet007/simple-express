@@ -26,8 +26,7 @@ app.post("/", async (req, res) => {
   const data = await req.body;
   console.log(data);
   return res.json({
-    id: "1",
-    user: "admin",
+    success: true,
   });
 });
 
