@@ -7,7 +7,8 @@ app.setStatic("public");
 app.setViewsDir("views");
 
 app.get("/", (req, res) => {
-  console.log(req.query);
+  if (req.query) console.log(req.query);
+
   return res.renderFile("index", {
     tool: "EJS",
     string: "",
@@ -25,9 +26,7 @@ app.get("/:string", (req, res) => {
 app.post("/", async (req, res) => {
   const data = await req.body;
   console.log(data);
-  return res.json({
-    success: true,
-  });
+  return res.redirect("/");
 });
 
 app.use((req, res) => {
