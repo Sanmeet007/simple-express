@@ -1,4 +1,4 @@
-// TODO implement the famous parser for requests and files ... Also implement the :id thing
+// TODO implement the files
 
 import express from "./lib/express.js";
 
@@ -7,6 +7,7 @@ app.setStatic("public");
 app.setViewsDir("views");
 
 app.get("/", (req, res) => {
+  console.log(req.query);
   return res.renderFile("index", {
     tool: "EJS",
     string: "",
@@ -21,7 +22,9 @@ app.get("/:string", (req, res) => {
   });
 });
 
-app.post("/", (req, res) => {
+app.post("/", async (req, res) => {
+  const data = await req.body;
+  console.log(data);
   return res.json({
     id: "1",
     user: "admin",
