@@ -6,7 +6,6 @@ app.setViewsDir("views");
 
 app.get("/", (req, res) => {
   if (req.query) console.log("GET data : ", req.query);
-
   return res.renderFile("index", {
     tool: "EJS",
     string: "",
@@ -22,9 +21,9 @@ app.get("/:string", (req, res) => {
 });
 
 app.post("/", async (req, res) => {
-  req.files["file"].forEach((file) => {
-    file.upload();
-  });
+  // req.files["file"].forEach((file) => {
+  //   file.upload();
+  // });
   console.log(req.body);
   return res.redirect("/");
 });
