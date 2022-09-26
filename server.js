@@ -23,12 +23,8 @@ app.get("/:string", (req, res) => {
 });
 
 app.post("/", async (req, res) => {
-  // req.files.forEach(file =>{
-  //   file.upload("./uploads");
-  // })
-  // console.log(req.files);
-  req.files.forEach((file) => {
-    file.upload("./temp");
+  req.files["file"].forEach((file) => {
+    file.upload();
   });
   console.log(req.body);
   return res.redirect("/");
