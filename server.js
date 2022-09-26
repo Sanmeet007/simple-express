@@ -20,11 +20,17 @@ app.get("/:string", (req, res) => {
   });
 });
 
-app.post("/", async (req, res) => {
-  // req.files["file"].forEach((file) => {
-  //   file.upload();
-  // });
-  console.log(req.body);
+app.post("/", (req, res) => {
+  if (req.hasOwnProperty("files")) {
+    req.files["file"].forEach((file) => {
+      file.upload();
+    });
+  }
+
+  if (req.hasOwnProperty("body")) {
+    console.log(req.body);
+  }
+
   return res.redirect("/");
 });
 
