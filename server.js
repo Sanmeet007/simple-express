@@ -1,7 +1,4 @@
-// TODO implement the files
-
 import express from "./lib/express.js";
-import bodyParser from "./lib/body.js";
 
 const app = express();
 app.setStatic("public");
@@ -25,6 +22,7 @@ app.get("/:string", (req, res) => {
 });
 
 app.post("/", async (req, res) => {
+  console.log(req.body);
   return res.redirect("/");
 });
 
