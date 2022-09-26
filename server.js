@@ -1,7 +1,6 @@
 import express from "./lib/express.js";
 
 const app = express();
-app.port;
 app.setStatic("public");
 app.setViewsDir("views");
 
@@ -36,7 +35,9 @@ app.post("/", (req, res) => {
   return res.redirect("/");
 });
 
-app.use((req, res, next) => {});
+app.use((req, res, next) => {
+  console.log("Logging request url : ", req.url);
+});
 
 app.route("/", "PUT", (req, res) => {
   console.log("PUT request encountered");
@@ -45,6 +46,16 @@ app.route("/", "PUT", (req, res) => {
 
 app.error(404, (_, res) => {
   return res.sendFile("public/index.html", 404);
+});
+
+app.error(500, (_, res) => {
+  return res.json(
+    {
+      error: true,
+      message: "Internal server error",
+    },
+    500
+  );
 });
 
 app.listen(2000);
