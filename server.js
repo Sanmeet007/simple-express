@@ -22,12 +22,13 @@ app.get("/:string", (req, res, next) => {
 });
 
 app.post("/", (req, res) => {
-  if (req.hasOwnProperty("files")) {
+  if (req.files.hasOwnProperty("file")) {
     req.files["file"].forEach((file) => {
       file.upload();
     });
+  } else {
+    console.log("No files were attached");
   }
-
   if (req.hasOwnProperty("body")) {
     console.log(req.body);
   }
