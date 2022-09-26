@@ -1,4 +1,5 @@
 import express from "./lib/express.js";
+import busboy from "busboy";
 
 const app = express();
 app.setStatic("public");
@@ -22,6 +23,9 @@ app.get("/:string", (req, res) => {
 });
 
 app.post("/", async (req, res) => {
+  // req.files.forEach(file =>{
+  //   file.upload("./uploads");
+  // })
   console.log(req.body);
   return res.redirect("/");
 });
