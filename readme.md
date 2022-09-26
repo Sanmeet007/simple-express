@@ -35,3 +35,7 @@ The Simple-Express's idealogy is to provide small, beginner friendly , robust to
 
 - `busboy` : For extracting files from the request
 - `ejs` : For rendering different views
+
+#### Developer contact
+
+Email : ssanmeet123@gmail.com
