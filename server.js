@@ -26,6 +26,10 @@ app.post("/", async (req, res) => {
   // req.files.forEach(file =>{
   //   file.upload("./uploads");
   // })
+  // console.log(req.files);
+  req.files.forEach((file) => {
+    file.upload("./temp");
+  });
   console.log(req.body);
   return res.redirect("/");
 });
