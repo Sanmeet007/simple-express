@@ -38,4 +38,5 @@ The Simple-Express's idealogy is to provide small, beginner friendly , robust to
 
 #### Developer contact
 
+Please feel free for any queries or disscussion
 Email : ssanmeet123@gmail.com
