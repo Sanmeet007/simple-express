@@ -1,6 +1,7 @@
 import express from "./lib/express.js";
 
 const app = express();
+app.port;
 app.setStatic("public");
 app.setViewsDir("views");
 
@@ -12,7 +13,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/:string", (req, res) => {
+app.get("/:string", (req, res, next) => {
   const string = req.params.string;
   return res.renderFile("index", {
     tool: "EJS",
@@ -34,8 +35,15 @@ app.post("/", (req, res) => {
   return res.redirect("/");
 });
 
+app.use((req, res, next) => {});
+
+app.route("/", "PUT", (req, res) => {
+  console.log("PUT request encountered");
+  return res.send("Method not implemented", {}, 501);
+});
+
 app.error(404, (_, res) => {
-  return res.sendFile("public/404.html");
+  return res.sendFile("public/index.html", 404);
 });
 
 app.listen(2000);
