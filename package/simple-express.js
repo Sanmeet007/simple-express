@@ -93,19 +93,18 @@ class ExpressResponse extends http.ServerResponse {
    *
    * @param {FilePath} filePath
    * @param {object} params
-   * @param {number} statusCode
-   * @param {number=} statusCode
+   * @param {number=200} statusCode
    * @param {object} headers
    * @returns {ExpressResponse} [Renders the whole view and returns the response]
    *
    *`NOTE` : It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping.
    */
-  async renderFile(filePath, params, statusCode = 200, headers = {}) {}
+  async renderFile(filePath, params = {}, statusCode = 200, headers = {}) {}
 
   /**
    * @param {URL} url
    * @param {number} redirectCode
-   * @param {number=} redirectCode
+   * @param {number=302} redirectCode
    * @returns {ExpressResponse}
    */
   redirect(url, redirectCode = 302) {}
@@ -648,7 +647,7 @@ class Express {
 
     response.renderFile = async (
       filePath,
-      params,
+      params = {},
       statusCode = 200,
       headers = {}
     ) => {
@@ -663,7 +662,6 @@ class Express {
         } else {
           path = this.viewsDir + "/" + filePath;
         }
-
         const data = await ejs.renderFile(path, params);
         return response.end(data);
       } else {
