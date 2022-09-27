@@ -352,7 +352,7 @@ class Express {
   #staticPaths = [];
 
   /** @type {String} */
-  host = "localhost";
+  #dhost = "localhost";
 
   /** @type {DirPath} */
   #viewsDirPath = "views";
@@ -363,6 +363,13 @@ class Express {
    */
   get port() {
     return this.#port;
+  }
+
+  /**
+   * Sets or Returns the port number for Express server.
+   */
+  get host() {
+    return this.#dhost;
   }
 
   set port(val) {
@@ -781,31 +788,26 @@ class Express {
   }
 
   /**
+   * @param {PortNumber} port
+   * @param {string} host
+   * @param {Function} callBack
    * @returns {http.Server} HTTPServer [Returns http.server]
    * Listen for connections.
    *
    * A node `http.Server` is returned, with this
    * application (which is a `Function`) as its
-   * callback. If you wish to create both an HTTP
-   * and HTTPS server you may do so with the "http"
-   * and "https" modules as shown here:
-   *
-   *    var http = require('http')
-   *      , https = require('https')
-   *      , express = require('express')
-   *      , app = express();
-   *
-   *    http.createServer(app).listen(80);
-   *    https.createServer({ ... }, app).listen(443);
+   * callback. This listen for the requests and reponses for the same.
    */
-  listen(port = 3000, cb = null) {
+
+  listen(port = 3000, host = "localhost", cb = null) {
     try {
       this.#createServerAndHandleRequests();
-      return this.#server.listen(port, () => {
+      return this.#server.listen(port, host, (e) => {
         this.#port = port;
+        this.#dhost = host;
         if (typeof port != "number") throw Error("Invalid port number");
-        console.log(`Server started at : http://localhost:${port}`);
-        if (typeof cb == "function") cb();
+        console.log(`Server started at : http://${this.host}:${this.port}`);
+        if (typeof cb == "function") cb(e);
       });
     } catch (E) {
       console.log(E);
