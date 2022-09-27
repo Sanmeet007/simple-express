@@ -12,6 +12,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@sanmeet007/simple-express": "^1.1.0"
+    "@sanmeet007/simple-express": "^1.1.1"
   }
 }
