@@ -1,5 +1,5 @@
 # Package folders
-/node_modules/
+/package/node_modules/
 
 # Example folders
 /example/node_modules/
