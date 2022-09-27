@@ -1,5 +1,5 @@
 {
-  "name": "simple-express",
+  "name": "@sanmeet007/simple-express",
   "version": "1.0.3",
   "description": "Simple-Express is a minimal and flexible Node.js web application framework provides beginner friendly user experience.",
   "main": "simple-express.js",
