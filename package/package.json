@@ -12,7 +12,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "simple-express"
+    "simple-express",
+    "simple-express-sever",
+    "express"
   ],
   "author": "Sanmeet Singh",
   "license": "ISC",
