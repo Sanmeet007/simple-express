@@ -691,7 +691,7 @@ class Express {
       }
     ) => {
       response.statusCode = statusCode;
-      response.setHeader(headers);
+      response.setHeaders(headers);
       return response.end(string);
     };
 
