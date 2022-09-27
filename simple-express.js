@@ -1,4 +1,4 @@
-import bodyParser from "./body-parser.js";
+import bodyParser from "./utils/body-parser.js";
 import http from "http";
 import fs from "fs";
 import ejs from "ejs";
