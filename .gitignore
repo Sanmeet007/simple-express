@@ -1,4 +1,7 @@
+# Package folders
 /node_modules/
+
+# Example folders
 /example/node_modules/
 /example/testing/
 /example/uploads/
