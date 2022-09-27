@@ -1,5 +1,6 @@
 # Package folders
 /package/node_modules/
+/package/readme.md
 
 # Example folders
 /example/node_modules/
