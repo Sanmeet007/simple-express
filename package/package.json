@@ -3,7 +3,6 @@
   "version": "1.1.1",
   "description": "Simple-Express is a minimal and flexible Node.js web application framework provides beginner friendly user experience.",
   "main": "simple-express.js",
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/Sanmeet007/simple-express.git"

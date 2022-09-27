@@ -1,7 +1,7 @@
-import busboy from "busboy";
-import fs from "fs";
-import os from "os";
-import path from "path";
+const path = require("path");
+const fs = require("fs");
+const os = require("os");
+const busboy = require("busboy");
 
 class File {
   tempName = null;
@@ -147,4 +147,4 @@ const bodyParser = async (req) => {
   });
 };
 
-export default bodyParser;
+module.exports = bodyParser;

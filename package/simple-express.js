@@ -1,7 +1,7 @@
-import bodyParser from "./utils/body-parser.js";
-import http from "http";
-import fs from "fs";
-import ejs from "ejs";
+const bodyParser = require("./utils/body-parser.js");
+const http = require("http");
+const ejs = require("ejs");
+const fs = require("fs");
 
 class RequestHandlerObject {
   /** @type {Number}*/
@@ -816,4 +816,4 @@ const express = () => {
   return new Express();
 };
 
-export default express;
+module.exports = express;
