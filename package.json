@@ -1,6 +1,6 @@
 {
   "name": "simple-express",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Simple-Express is a minimal and flexible Node.js web application framework provides beginner friendly user experience.",
   "main": "simple-express.js",
   "type": "module",
@@ -19,5 +19,8 @@
   "dependencies": {
     "busboy": "^1.6.0",
     "ejs": "^3.1.8"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
   }
 }

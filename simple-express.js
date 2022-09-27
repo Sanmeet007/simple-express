@@ -33,7 +33,7 @@ class ExpressResponse extends http.ServerResponse {
    *  "Content-Type" : "application/json"
    * })
    *
-   * @param {Object} headers [Adds the object passed as arg to the header object]
+   * @param {object} headers [Adds the object passed as arg to the header object]
    * @returns void
    */
   setHeaders(headers) {}
@@ -70,9 +70,9 @@ class ExpressResponse extends http.ServerResponse {
    * });
    *
    * @param {String} fileContents
-   * @param {Object} params
+   * @param {object} params
    * @param {number=} statusCode
-   * @param {Object=} headers
+   * @param {object=} headers
    * @returns {ExpressResponse} [Returns rendered string and serves the view]
    *
    * `NOTE` : It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping.
@@ -92,10 +92,10 @@ class ExpressResponse extends http.ServerResponse {
    * });
    *
    * @param {FilePath} filePath
-   * @param {Object} params
+   * @param {object} params
    * @param {number} statusCode
    * @param {number=} statusCode
-   * @param {Object} headers
+   * @param {object} headers
    * @returns {ExpressResponse} [Renders the whole view and returns the response]
    *
    *`NOTE` : It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping.
@@ -123,7 +123,7 @@ class ExpressResponse extends http.ServerResponse {
      * @param {FilePath} filePath
      * @param {number} statusCode
      * @param {number=} statusCode
-     * @param {Object} headers
+     * @param {object} headers
      * @returns {HTTPResponse} [Sends the file ]
      *
      *`NOTE` : It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping.
@@ -143,8 +143,8 @@ class ExpressResponse extends http.ServerResponse {
      * @param {String} contents
      * @param {number} statusCode
      * @param {number=} statusCode
-     * @param {Object} headers
-     * @param {Object=} headers
+     * @param {object} headers
+     * @param {object=} headers
        * @returns {ExpressResponse} [Sends the file ]
        *
        *`NOTE` : It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping.
@@ -169,29 +169,30 @@ class ExpressResponse extends http.ServerResponse {
    *  }, 505);
    * });
    *
-   * @param {Object} object
+   * @param {object} object
    * @param {number} statusCode
    * @param {number=} statusCode
-   * @param {Object} optionalHeaders
-   * @param {Object=} optionalHeaders
+   * @param {object} optionalHeaders
+   * @param {object=} optionalHeaders
    * @returns {ExpressResponse} Returns JSON response
    */
   json(object, statusCode = 200) {}
 }
 
 class ExpressRequest extends http.IncomingMessage {
-  /** @type {Object} */
+  /** @type {object} */
   body;
 
-  /** @type {Object}*/
+  /** @type {object}*/
   query;
 
-  /** @type {Object}*/
+  /** @type {object}*/
   params;
 
-  /** @type {Object}*/
+  /** @type {object}*/
   files;
 }
+
 /**
  * A number, or a string containing a number.
  *
@@ -697,7 +698,7 @@ class Express {
     /**
      * Returns JSON response
      *
-     * @param {Object} object
+     * @param {object} object
      * @returns {ExpressResponse}
      */
     response.json = (object, statusCode = 200, optionalHeaders = {}) => {
