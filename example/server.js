@@ -1,4 +1,4 @@
-import express from "simple-express-server";
+import express from "@sanmeet007/simple-express";
 
 const app = express();
 app.setStatic("public");

@@ -12,6 +12,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "simple-express-server": "file:../package"
+    "@sanmeet007/simple-express": "^1.0.5"
   }
 }
