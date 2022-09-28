@@ -7,6 +7,7 @@ class File {
   tempName = null;
   tempLocation = null;
   info = null;
+  #filesize = 0;
 
   constructor(info, fileStream) {
     this.info = info;
@@ -17,6 +18,7 @@ class File {
     let dataChunks = [];
 
     fileStream.on("data", (data) => {
+      this.#filesize += Buffer.byteLength(data);
       dataChunks.push(data);
     });
 
@@ -25,6 +27,10 @@ class File {
       fs.writeFileSync(tempFileLocation, Buffer.concat(dataChunks));
       this.tempLocation = tempFileLocation;
     });
+  }
+
+  get size() {
+    return this.#filesize;
   }
 
   upload(uploadFolderPath = "uploads", fileName = null) {
@@ -50,6 +56,7 @@ class File {
       });
       return true;
     } catch (e) {
+      console.warn(e);
       return false;
     }
   }
@@ -84,31 +91,35 @@ const withFileParse = (req) => {
   const files = {};
 
   return new Promise((resolver, rejector) => {
-    const bb = busboy({ headers: req.headers });
-    bb.on("file", (name, file, info) => {
-      if (info.filename != undefined) {
-        if (!files.hasOwnProperty(name)) {
-          files[name] = [];
-          files[name].push(new File(info, file));
+    try {
+      const bb = busboy({ headers: req.headers });
+      bb.on("file", (name, file, info) => {
+        if (info.filename != undefined) {
+          if (!files.hasOwnProperty(name)) {
+            files[name] = [];
+            files[name].push(new File(info, file));
+          } else {
+            files[name].push(new File(info, file));
+          }
         } else {
-          files[name].push(new File(info, file));
+          file.resume();
         }
-      } else {
-        file.resume();
-      }
-    });
+      });
 
-    bb.on("field", (name, val, _) => {
-      returnObject[name] = val;
-    });
-    bb.on("close", () => {
-      req.files = files;
-      resolver(returnObject);
-    });
-    bb.on("error", (e) => {
-      rejector(e);
-    });
-    req.pipe(bb);
+      bb.on("field", (name, val, _) => {
+        returnObject[name] = val;
+      });
+      bb.on("close", () => {
+        req.files = files;
+        return resolver(returnObject);
+      });
+      bb.on("error", (e) => {
+        return rejector(e);
+      });
+      req.pipe(bb);
+    } catch (E) {
+      return rejector(E);
+    }
   });
 };
 

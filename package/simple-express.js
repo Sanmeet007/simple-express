@@ -619,16 +619,22 @@ class Express {
     };
 
     response.error = (errorCode) => {
-      const [req, res] = [request, response];
+      try {
+        const [req, res] = [request, response];
 
-      response.writeHead(errorCode);
-      const errorHandlers = this.#requests.filter(
-        (ec) => ec.errorCode == errorCode
-      );
-      if (errorHandlers.length > 0) {
-        return errorHandlers[0].callBack(req, res);
+        response.writeHead(errorCode);
+        const errorHandlers = this.#requests.filter(
+          (ec) => ec.errorCode == errorCode
+        );
+        if (errorHandlers.length > 0) {
+          return errorHandlers[0].callBack(req, res);
+        }
+        return response.end();
+      } catch (E) {
+        console.warn(E);
+        response.writeHead(500);
+        return response.end();
       }
-      return response.end();
     };
 
     response.redirect = (url, redirectCode = 302) => {
@@ -724,67 +730,76 @@ class Express {
   }
 
   #createServerAndHandleRequests() {
-    this.#server = this.#http.createServer(async (req, res) => {
-      const requestHandlers = this.#requests.filter(
-        (el) => el.method != "ERROR"
-      );
-      req.body = await bodyParser(req);
-      this.#addResponseMethods(req, res);
+    this.#server = this.#http.createServer(
+      async (
+        /** @type {ExpressRequest} */ req,
+        /** @type {ExpressResponse} */ res
+      ) => {
+        try {
+          const requestHandlers = this.#requests.filter(
+            (el) => el.method != "ERROR"
+          );
+          req.body = await bodyParser(req);
+          this.#addResponseMethods(req, res);
 
-      for (let i = 0; i < requestHandlers.length; i++) {
-        const currentRequestHandler = requestHandlers[i];
-        const urlMatches = matchURL(req, currentRequestHandler);
-        if (req.method == currentRequestHandler.method && urlMatches) {
-          if (typeof currentRequestHandler.next == "function") {
-            let nextReturnValue;
-            const next = () => {
-              nextReturnValue = currentRequestHandler.next(req, res);
-              return nextReturnValue;
-            };
+          for (let i = 0; i < requestHandlers.length; i++) {
+            const currentRequestHandler = requestHandlers[i];
+            const urlMatches = matchURL(req, currentRequestHandler);
+            if (req.method == currentRequestHandler.method && urlMatches) {
+              if (typeof currentRequestHandler.next == "function") {
+                let nextReturnValue;
+                const next = () => {
+                  nextReturnValue = currentRequestHandler.next(req, res);
+                  return nextReturnValue;
+                };
 
-            const handlerReturn = currentRequestHandler.callBack(
-              req,
-              res,
-              next
-            );
+                const handlerReturn = currentRequestHandler.callBack(
+                  req,
+                  res,
+                  next
+                );
 
-            if (handlerReturn == null) {
-              const nextReturnValue = currentRequestHandler.next(req, res);
+                if (handlerReturn == null) {
+                  const nextReturnValue = currentRequestHandler.next(req, res);
 
-              if (nextReturnValue != null) {
-                return nextReturnValue;
+                  if (nextReturnValue != null) {
+                    return nextReturnValue;
+                  } else {
+                    console.log("Next didn't end response");
+                    return res.end("");
+                  }
+                } else {
+                  return handlerReturn;
+                }
               } else {
-                console.log("Next didn't end response");
-                return res.end("");
+                return currentRequestHandler.callBack(req, res);
               }
             } else {
-              return handlerReturn;
+              if (currentRequestHandler.method == "ANY") {
+                let wasNextCalled = false;
+                const next = () => {
+                  wasNextCalled = true;
+                  return;
+                };
+
+                const handlerReturn = currentRequestHandler.callBack(
+                  req,
+                  res,
+                  next
+                );
+
+                if (wasNextCalled) continue;
+                if (handlerReturn != null) return;
+              }
             }
-          } else {
-            return currentRequestHandler.callBack(req, res);
           }
-        } else {
-          if (currentRequestHandler.method == "ANY") {
-            let wasNextCalled = false;
-            const next = () => {
-              wasNextCalled = true;
-              return;
-            };
-
-            const handlerReturn = currentRequestHandler.callBack(
-              req,
-              res,
-              next
-            );
-
-            if (wasNextCalled) continue;
-            if (handlerReturn != null) return;
-          }
+          res.writeHead(404, "Page not found");
+          return res.end();
+        } catch (E) {
+          return res.error(500);
         }
       }
-      res.writeHead(404, "Page not found");
-      return res.end();
-    });
+    );
   }
 
   /**
