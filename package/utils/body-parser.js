@@ -7,25 +7,36 @@ class File {
   tempName = null;
   tempLocation = null;
   info = null;
+  isOverLimit = false;
   #filesize = 0;
+  #uploadsDir;
 
-  constructor(info, fileStream) {
+  constructor(uploadsDir, info, fileStream) {
     this.info = info;
     this.tempName = "[" + Date.now() + "]" + info.filename;
     this.tempLocation = "";
+    this.#uploadsDir = uploadsDir;
     const tempDir = os.tmpdir();
 
     let dataChunks = [];
 
+    fileStream.on("limit", (e) => {
+      this.isOverLimit = true;
+    });
+
     fileStream.on("data", (data) => {
-      this.#filesize += Buffer.byteLength(data);
-      dataChunks.push(data);
+      if (!this.isOverLimit) {
+        this.#filesize += Buffer.byteLength(data);
+        dataChunks.push(data);
+      }
     });
 
     fileStream.on("close", () => {
-      const tempFileLocation = tempDir + path.sep + this.tempName;
-      fs.writeFileSync(tempFileLocation, Buffer.concat(dataChunks));
-      this.tempLocation = tempFileLocation;
+      if (!this.isOverLimit) {
+        const tempFileLocation = tempDir + path.sep + this.tempName;
+        fs.writeFileSync(tempFileLocation, Buffer.concat(dataChunks));
+        this.tempLocation = tempFileLocation;
+      }
     });
   }
 
@@ -33,7 +44,13 @@ class File {
     return this.#filesize;
   }
 
-  upload(uploadFolderPath = "uploads", fileName = null) {
+  upload(uploadFolderPath = null, fileName = null) {
+    if (this.isOverLimit) {
+      console.log("over");
+      throw Error("File is over limit");
+    }
+    if (uploadFolderPath == null) uploadFolderPath = this.#uploadsDir;
+
     let finalFileName = "";
     try {
       if (fileName != null) {
@@ -43,8 +60,11 @@ class File {
       }
 
       if (!fs.existsSync(uploadFolderPath)) {
-        fs.mkdirSync("uploads");
-        uploadFolderPath = "uploads";
+        try {
+          fs.mkdirSync(uploadFolderPath);
+        } catch (e) {
+          uploadFolderPath = "uploads";
+        }
       }
 
       const readStream = fs.createReadStream(this.tempLocation);
@@ -86,20 +106,20 @@ const withoutFileParse = (data, delimiter = "&") => {
   }
 };
 
-const withFileParse = (req) => {
+const withFileParse = (uploadsDir, req, options = {}) => {
   const returnObject = {};
   const files = {};
 
   return new Promise((resolver, rejector) => {
     try {
-      const bb = busboy({ headers: req.headers });
+      const bb = busboy({ headers: req.headers, ...options });
       bb.on("file", (name, file, info) => {
         if (info.filename != undefined) {
           if (!files.hasOwnProperty(name)) {
             files[name] = [];
-            files[name].push(new File(info, file));
+            files[name].push(new File(uploadsDir, info, file));
           } else {
-            files[name].push(new File(info, file));
+            files[name].push(new File(uploadsDir, info, file));
           }
         } else {
           file.resume();
@@ -123,37 +143,50 @@ const withFileParse = (req) => {
   });
 };
 
-const bodyParser = async (req) => {
+const bodyParser = async (
+  req,
+  options = {
+    uploadsDir: "uploads",
+    options: {},
+  }
+) => {
   return new Promise(async (resolver, rejector) => {
-    if (req.method != "POST") return resolver(null); // suppress other requests
+    try {
+      if (req.method != "POST") return resolver(null); // suppress other requests
 
-    const contentType = req.headers["content-type"];
-    const formEncType = contentType.split(";")[0];
-    const returnObject = {};
-    if (formEncType == "multipart/form-data") {
-      const result = await withFileParse(req);
-      Object.assign(returnObject, result);
-      resolver(returnObject);
-    } else if (formEncType == "application/x-www-form-urlencoded") {
-      req.on("data", (data) => {
-        Object.assign(returnObject, withoutFileParse(data, "&"));
-        return resolver(returnObject);
-      });
-    } else if (formEncType == "text/plain") {
-      req.on("data", (data) => {
-        Object.assign(returnObject, withoutFileParse(data, "\n"));
-        return resolver(returnObject);
-      });
-    } else if (formEncType == "application/json") {
-      req.on("data", (d) => {
-        return resolver(JSON.parse(d.toString()));
-      });
-    } else if (formEncType == "application/xml") {
-      req.on("data", (d) => {
-        return resolver(XMLParser(d.toString()));
-      });
-    } else {
-      return resolver(null);
+      const contentType = req.headers["content-type"];
+      const formEncType = contentType.split(";")[0];
+      const returnObject = {};
+      if (formEncType == "multipart/form-data") {
+        const busboyOptions = options.options;
+        const uploadsDir = options.uploadsDir;
+        const result = await withFileParse(uploadsDir, req, busboyOptions);
+        Object.assign(returnObject, result);
+        resolver(returnObject);
+      } else if (formEncType == "application/x-www-form-urlencoded") {
+        req.on("data", (data) => {
+          Object.assign(returnObject, withoutFileParse(data, "&"));
+          return resolver(returnObject);
+        });
+      } else if (formEncType == "text/plain") {
+        req.on("data", (data) => {
+          Object.assign(returnObject, withoutFileParse(data, "\n"));
+          return resolver(returnObject);
+        });
+      } else if (formEncType == "application/json") {
+        req.on("data", (d) => {
+          return resolver(JSON.parse(d.toString()));
+        });
+      } else if (formEncType == "application/xml") {
+        req.on("data", (d) => {
+          return resolver(XMLParser(d.toString()));
+        });
+      } else {
+        return resolver(null);
+      }
+    } catch (E) {
+      console.log(E);
+      return rejector(E);
     }
   });
 };

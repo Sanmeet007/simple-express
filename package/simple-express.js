@@ -50,12 +50,14 @@ class ExpressResponse extends http.ServerResponse {
    *
    *
    * @param {number} errorCode
+   * @param {object} errorObject
+   * @param {object=} errorObject
    * @returns {HTTPResponse}
    *
    * `NOTE` : You need to edit the response given by the sendFile or send or render etc
    *
    */
-  error(errorCode) {}
+  error(errorCode, errorObject = null) {}
 
   /**
    *
@@ -225,6 +227,7 @@ class ExpressRequest extends http.IncomingMessage {
  * @callback ErrorRequestHandler
  * @param {ExpressRequest} req
  * @param {ExpressResponse} res
+ * @param {Error} error
  * @param {Function} next
  * @returns void
  *
@@ -359,6 +362,12 @@ class Express {
   /** @type {DirPath} */
   #viewsDirPath = "views";
 
+  /** @type {DirPath} */
+  #uploadDirPath = "uploads";
+
+  /** @type {object} */
+  #busboyOptions = {};
+
   /**
    * Sets or Returns the port number for Express server.
    * @type {PortNumber}
@@ -427,6 +436,18 @@ class Express {
       }
     });
     return urlPaths;
+  }
+
+  /**
+   *
+   * Sets the default uploads directory path and adds busboy options if needed
+   * @param {DirPath} uploadDirPath
+   * @param {Object} uploadOptions
+   */
+
+  uploaderOptions(uploadDirPath = "uploads", uploadOptions = {}) {
+    this.#uploadDirPath = uploadDirPath;
+    this.#busboyOptions = uploadOptions;
   }
 
   /**
@@ -620,8 +641,13 @@ class Express {
       });
     };
 
-    response.error = (errorCode) => {
+    response.error = (errorCode, errorObject = null) => {
       try {
+        if (errorCode == null || errorCode == undefined) {
+          errorCode = 500;
+          errorObject = Error("ErrorCode not specified");
+        }
+
         const [req, res] = [request, response];
 
         response.writeHead(errorCode);
@@ -629,7 +655,9 @@ class Express {
           (ec) => ec.errorCode == errorCode
         );
         if (errorHandlers.length > 0) {
-          return errorHandlers[0].callBack(req, res);
+          return errorHandlers[0].callBack(req, res, errorObject);
+        } else {
+          if (errorObject != null) console.log(errorObject);
         }
         return response.end();
       } catch (E) {
@@ -668,19 +696,24 @@ class Express {
     ) => {
       response.statusCode = statusCode;
       response.setHeaders(headers);
+      try {
+        if (this.#viewsDirPath != null) {
+          let path = "";
+          if (!filePath) throw Error("Filepath cant be empty");
 
-      if (this.#viewsDirPath != null) {
-        let path = "";
+          if (filePath.slice(-4) != ".ejs") {
+            path = this.viewsDir + "/" + filePath + ".ejs";
+          } else {
+            path = this.viewsDir + "/" + filePath;
+          }
+          const data = await ejs.renderFile(path, params);
 
-        if (filePath.slice(-4) != ".ejs") {
-          path = this.viewsDir + "/" + filePath + ".ejs";
+          return response.end(data);
         } else {
-          path = this.viewsDir + "/" + filePath;
+          return response.error(500, Error("Views directory not set"));
         }
-        const data = await ejs.renderFile(path, params);
-        return response.end(data);
-      } else {
-        throw Error("Views directory not set");
+      } catch (E) {
+        return response.error(500, E);
       }
     };
 
@@ -725,8 +758,7 @@ class Express {
 
         return response.end(JSON.stringify(object));
       } catch (E) {
-        console.log(E);
-        return response.error(500);
+        return response.error(500, E);
       }
     };
   }
@@ -741,7 +773,12 @@ class Express {
           const requestHandlers = this.#requests.filter(
             (el) => el.method != "ERROR"
           );
-          req.body = await bodyParser(req);
+
+          req.body = await bodyParser(req, {
+            uploadsDir: this.#uploadDirPath,
+            options: this.#busboyOptions,
+          });
+
           this.#addResponseMethods(req, res);
 
           for (let i = 0; i < requestHandlers.length; i++) {
@@ -802,7 +839,8 @@ class Express {
           res.writeHead(404, "Page not found");
           return res.end();
         } catch (E) {
-          return res.error(500);
+          console.log(E);
+          return res.error(500, E);
         }
       }
     );
