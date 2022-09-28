@@ -10,7 +10,7 @@ class RequestHandlerObject {
   /** @type {String}*/
   url;
 
-  /** @type {Number}*/
+  /** @type {String}*/
   method;
 
   /** @type {Function}*/
@@ -71,7 +71,8 @@ class ExpressResponse extends http.ServerResponse {
    *
    * @param {String} fileContents
    * @param {object} params
-   * @param {number=} statusCode
+   * @param {number} statusCode
+   * @param {number=200} statusCode
    * @param {object=} headers
    * @returns {ExpressResponse} [Returns rendered string and serves the view]
    *
@@ -93,6 +94,7 @@ class ExpressResponse extends http.ServerResponse {
    *
    * @param {FilePath} filePath
    * @param {object} params
+   * @param {number} statusCode
    * @param {number=200} statusCode
    * @param {object} headers
    * @returns {ExpressResponse} [Renders the whole view and returns the response]
@@ -121,9 +123,9 @@ class ExpressResponse extends http.ServerResponse {
 
      * @param {FilePath} filePath
      * @param {number} statusCode
-     * @param {number=} statusCode
+     * @param {number=200} statusCode
      * @param {object} headers
-     * @returns {HTTPResponse} [Sends the file ]
+     * @returns {HTTPResponse} Sends the file
      *
      *`NOTE` : It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping.
      */
@@ -141,7 +143,7 @@ class ExpressResponse extends http.ServerResponse {
 
      * @param {String} contents
      * @param {number} statusCode
-     * @param {number=} statusCode
+     * @param {number=200} statusCode
      * @param {object} headers
      * @param {object=} headers
        * @returns {ExpressResponse} [Sends the file ]
@@ -170,7 +172,7 @@ class ExpressResponse extends http.ServerResponse {
    *
    * @param {object} object
    * @param {number} statusCode
-   * @param {number=} statusCode
+   * @param {number=200} statusCode
    * @param {object} optionalHeaders
    * @param {object=} optionalHeaders
    * @returns {ExpressResponse} Returns JSON response
@@ -745,7 +747,11 @@ class Express {
           for (let i = 0; i < requestHandlers.length; i++) {
             const currentRequestHandler = requestHandlers[i];
             const urlMatches = matchURL(req, currentRequestHandler);
-            if (req.method == currentRequestHandler.method && urlMatches) {
+            if (
+              req.method.toLowerCase() ==
+                currentRequestHandler.method.toLowerCase() &&
+              urlMatches
+            ) {
               if (typeof currentRequestHandler.next == "function") {
                 let nextReturnValue;
                 const next = () => {
