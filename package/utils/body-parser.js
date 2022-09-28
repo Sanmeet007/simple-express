@@ -52,7 +52,6 @@ class File {
 
   upload(uploadFolderPath = null, fileName = null) {
     if (this.isOverLimit) {
-      console.log("over");
       throw Error("File is over limit");
     }
 

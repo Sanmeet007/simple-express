@@ -848,7 +848,6 @@ class Express {
           res.writeHead(404, "Page not found");
           return res.end();
         } catch (E) {
-          console.log(E);
           return res.error(500, E);
         }
       }
