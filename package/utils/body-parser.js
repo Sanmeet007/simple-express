@@ -10,8 +10,9 @@ class File {
   isOverLimit = false;
   #filesize = 0;
   #uploadsDir;
+  data = null;
 
-  constructor(uploadsDir, info, fileStream) {
+  constructor(uploadsDir, useTempDir, info, fileStream) {
     this.info = info;
     this.tempName = "[" + Date.now() + "]" + info.filename;
     this.tempLocation = "";
@@ -19,6 +20,7 @@ class File {
     const tempDir = os.tmpdir();
 
     let dataChunks = [];
+    const tempFileLocation = tempDir + path.sep + this.tempName;
 
     fileStream.on("limit", (e) => {
       this.isOverLimit = true;
@@ -33,9 +35,13 @@ class File {
 
     fileStream.on("close", () => {
       if (!this.isOverLimit) {
-        const tempFileLocation = tempDir + path.sep + this.tempName;
-        fs.writeFileSync(tempFileLocation, Buffer.concat(dataChunks));
-        this.tempLocation = tempFileLocation;
+        if (useTempDir) {
+          const tempFileLocation = tempDir + path.sep + this.tempName;
+          fs.writeFileSync(tempFileLocation, Buffer.concat(dataChunks));
+          this.tempLocation = tempFileLocation;
+        } else {
+          this.data = Buffer.concat(dataChunks);
+        }
       }
     });
   }
@@ -49,6 +55,7 @@ class File {
       console.log("over");
       throw Error("File is over limit");
     }
+
     if (uploadFolderPath == null) uploadFolderPath = this.#uploadsDir;
 
     let finalFileName = "";
@@ -67,14 +74,20 @@ class File {
         }
       }
 
-      const readStream = fs.createReadStream(this.tempLocation);
-      const writeStream = fs.createWriteStream(
-        uploadFolderPath + path.sep + finalFileName
-      );
-      readStream.pipe(writeStream).on("close", () => {
-        fs.unlinkSync(this.tempLocation);
-      });
-      return true;
+      const final_path = uploadFolderPath + path.sep + finalFileName;
+
+      if (this.data) {
+        fs.createWriteStream(final_path).write(this.data);
+        return true;
+      } else {
+        const readStream = fs.createReadStream(this.tempLocation);
+        const writeStream = fs.createWriteStream(final_path);
+
+        readStream.pipe(writeStream).on("close", () => {
+          fs.unlinkSync(this.tempLocation);
+        });
+        return true;
+      }
     } catch (e) {
       console.warn(e);
       return false;
@@ -106,7 +119,7 @@ const withoutFileParse = (data, delimiter = "&") => {
   }
 };
 
-const withFileParse = (uploadsDir, req, options = {}) => {
+const withFileParse = (uploadsDir, useTempDir, req, options = {}) => {
   const returnObject = {};
   const files = {};
 
@@ -117,9 +130,9 @@ const withFileParse = (uploadsDir, req, options = {}) => {
         if (info.filename != undefined) {
           if (!files.hasOwnProperty(name)) {
             files[name] = [];
-            files[name].push(new File(uploadsDir, info, file));
+            files[name].push(new File(uploadsDir, useTempDir, info, file));
           } else {
-            files[name].push(new File(uploadsDir, info, file));
+            files[name].push(new File(uploadsDir, useTempDir, info, file));
           }
         } else {
           file.resume();
@@ -145,6 +158,7 @@ const withFileParse = (uploadsDir, req, options = {}) => {
 
 const bodyParser = async (
   req,
+  useTempDir = false,
   options = {
     uploadsDir: "uploads",
     options: {},
@@ -160,7 +174,12 @@ const bodyParser = async (
       if (formEncType == "multipart/form-data") {
         const busboyOptions = options.options;
         const uploadsDir = options.uploadsDir;
-        const result = await withFileParse(uploadsDir, req, busboyOptions);
+        const result = await withFileParse(
+          uploadsDir,
+          useTempDir,
+          req,
+          busboyOptions
+        );
         Object.assign(returnObject, result);
         resolver(returnObject);
       } else if (formEncType == "application/x-www-form-urlencoded") {

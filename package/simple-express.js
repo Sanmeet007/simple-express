@@ -368,6 +368,9 @@ class Express {
   /** @type {object} */
   #busboyOptions = {};
 
+  /** @type {boolean} */
+  #useTempDir = false;
+
   /**
    * Sets or Returns the port number for Express server.
    * @type {PortNumber}
@@ -442,10 +445,16 @@ class Express {
    *
    * Sets the default uploads directory path and adds busboy options if needed
    * @param {DirPath} uploadDirPath
+   * @param {Boolean} useTempDir
    * @param {Object} uploadOptions
    */
 
-  uploaderOptions(uploadDirPath = "uploads", uploadOptions = {}) {
+  uploaderOptions(
+    uploadDirPath = "uploads",
+    useTempDir = false,
+    uploadOptions = {}
+  ) {
+    this.#useTempDir = useTempDir;
     this.#uploadDirPath = uploadDirPath;
     this.#busboyOptions = uploadOptions;
   }
@@ -774,7 +783,7 @@ class Express {
             (el) => el.method != "ERROR"
           );
 
-          req.body = await bodyParser(req, {
+          req.body = await bodyParser(req, this.#useTempDir, {
             uploadsDir: this.#uploadDirPath,
             options: this.#busboyOptions,
           });
