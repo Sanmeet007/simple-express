@@ -49,15 +49,15 @@ app.post("/", (req, res) => {
 });
 
 app.error(404, (_, res) => {
-  return res.sendFile("public/errors/404.html", 404);
+  return res.sendFile("public/errors/404.html");
 });
 
 app.error(500, (_, res) => {
-  return res.sendFile("public/errors/500.html", 500);
+  return res.sendFile("public/errors/500.html");
 });
 
 app.error(501, (_, res) => {
-  return res.sendFile("public/errors/501.html", 500);
+  return res.sendFile("public/errors/501.html");
 });
 
 app.listen(2000, "localhost", (e) => {
