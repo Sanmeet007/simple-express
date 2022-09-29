@@ -4,10 +4,10 @@ const app = express();
 
 app.setStatic("public"); // setting public dir
 app.setViewsDir("views"); // setting views dir
-
-// Now server supports only get and posts requests
-app.use((req, res, next) => {
-  if (req.method != "GET" && req.method != "POST") return res.error(501);
+app.uploaderOptions("uploads", false, {
+  limits: {
+    fileSize: 1 * 1024 * 1024, // limiting file with size over 1 MB
+  },
 });
 
 app.get("/", (req, res) => {
@@ -37,7 +37,11 @@ app.get("/:id", (req, res, next) => {
 app.post("/", (req, res) => {
   if (req.files != null && req.files.hasOwnProperty("file")) {
     req.files["file"].forEach((file) => {
-      file.upload();
+      if (!file.isOverLimit) {
+        file.upload();
+      } else {
+        console.log("File over limit");
+      }
     });
   }
 
