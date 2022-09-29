@@ -483,6 +483,15 @@ class Express {
     });
   }
 
+  /**
+   *
+   * Listens for a particular status error code and fires a callback which has access to the error.
+   *
+   * @param {ErrorRequestHandler} ErrorHandler
+   *
+   * Note : When 500 error code is handled then the logger will not longer log error to the console. You need to manually log the error.
+   */
+
   error(
     errorCode,
 
