@@ -58,38 +58,34 @@ class File {
     if (uploadFolderPath == null) uploadFolderPath = this.#uploadsDir;
 
     let finalFileName = "";
-    try {
-      if (fileName != null) {
-        finalFileName = fileName;
-      } else {
-        finalFileName = "[" + Date.now() + "]" + this.info.filename;
+
+    if (fileName != null) {
+      finalFileName = fileName;
+    } else {
+      finalFileName = "[" + Date.now() + "]" + this.info.filename;
+    }
+
+    if (!fs.existsSync(uploadFolderPath)) {
+      try {
+        fs.mkdirSync(uploadFolderPath);
+      } catch (e) {
+        uploadFolderPath = "uploads";
       }
+    }
 
-      if (!fs.existsSync(uploadFolderPath)) {
-        try {
-          fs.mkdirSync(uploadFolderPath);
-        } catch (e) {
-          uploadFolderPath = "uploads";
-        }
-      }
+    const final_path = uploadFolderPath + path.sep + finalFileName;
 
-      const final_path = uploadFolderPath + path.sep + finalFileName;
+    if (this.data) {
+      fs.createWriteStream(final_path).write(this.data);
+      return;
+    } else {
+      const readStream = fs.createReadStream(this.tempLocation);
+      const writeStream = fs.createWriteStream(final_path);
 
-      if (this.data) {
-        fs.createWriteStream(final_path).write(this.data);
-        return true;
-      } else {
-        const readStream = fs.createReadStream(this.tempLocation);
-        const writeStream = fs.createWriteStream(final_path);
-
-        readStream.pipe(writeStream).on("close", () => {
-          fs.unlinkSync(this.tempLocation);
-        });
-        return true;
-      }
-    } catch (e) {
-      console.warn(e);
-      return false;
+      readStream.pipe(writeStream).on("close", () => {
+        fs.unlinkSync(this.tempLocation);
+      });
+      return;
     }
   }
 }
