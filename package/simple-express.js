@@ -419,7 +419,7 @@ class Express {
   }
 
   /**
-   * Returns the views directory , ejs views will this for render views.
+   * Returns the views directory , ejs views will use this for render views.
    */
   get viewsDir() {
     return this.#viewsDirPath;
