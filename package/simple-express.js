@@ -800,31 +800,73 @@ class Express {
             ) {
               if (typeof currentRequestHandler.next == "function") {
                 let nextReturnValue;
-                const next = () => {
-                  nextReturnValue = currentRequestHandler.next(req, res);
+                const next = async () => {
+                  if (
+                    currentRequestHandler.next.constructor.name ==
+                    "AsyncFunction"
+                  ) {
+                    nextReturnValue = await currentRequestHandler.next(
+                      req,
+                      res
+                    );
+                  } else {
+                    nextReturnValue = currentRequestHandler.next(req, res);
+                  }
                   return nextReturnValue;
                 };
 
-                const handlerReturn = currentRequestHandler.callBack(
-                  req,
-                  res,
-                  next
-                );
+                let handlerReturn = null;
+                if (
+                  currentRequestHandler.callBack.constructor.name ==
+                  "AsyncFunction"
+                ) {
+                  handlerReturn = await currentRequestHandler.callBack(
+                    req,
+                    res,
+                    next
+                  );
+                } else {
+                  handlerReturn = currentRequestHandler.callBack(
+                    req,
+                    res,
+                    next
+                  );
+                }
 
                 if (handlerReturn == null) {
-                  const nextReturnValue = currentRequestHandler.next(req, res);
+                  let nextReturnValue = null;
+
+                  if (
+                    currentRequestHandler.next.constructor.name ==
+                    "AsyncFunction"
+                  ) {
+                    nextReturnValue = await currentRequestHandler.next(
+                      req,
+                      res
+                    );
+                  } else {
+                    nextReturnValue = currentRequestHandler.next(req, res);
+                  }
 
                   if (nextReturnValue != null) {
                     return nextReturnValue;
                   } else {
-                    console.log("Next didn't end response");
-                    return res.end("");
+                    throw Error("Next didn't end the reponse");
                   }
                 } else {
                   return handlerReturn;
                 }
               } else {
-                return currentRequestHandler.callBack(req, res);
+                let returnValue = null;
+                if (
+                  currentRequestHandler.callBack.constructor.name ==
+                  "AsyncFunction"
+                ) {
+                  returnValue = await currentRequestHandler.callBack(req, res);
+                } else {
+                  returnValue = currentRequestHandler.callBack(req, res);
+                }
+                return returnValue;
               }
             } else {
               if (currentRequestHandler.method == "ANY") {
@@ -834,19 +876,38 @@ class Express {
                   return;
                 };
 
-                const handlerReturn = currentRequestHandler.callBack(
-                  req,
-                  res,
-                  next
-                );
+                let handlerReturn = null;
+                if (
+                  currentRequestHandler.callBack.constructor.name ==
+                  "AsyncFunction"
+                ) {
+                  handlerReturn = await currentRequestHandler.callBack(
+                    req,
+                    res,
+                    next
+                  );
+                } else {
+                  handlerReturn = currentRequestHandler.callBack(
+                    req,
+                    res,
+                    next
+                  );
+                }
 
                 if (wasNextCalled) continue;
                 if (handlerReturn != null) return;
               }
             }
           }
-          res.writeHead(404, "Page not found");
-          return res.end();
+
+          if (req.method.toLowerCase() == "get") {
+            return res.error(404, Error(`Not found - ${req.url}`));
+          } else {
+            return res.error(
+              501,
+              Error(`${req.method} - method not implemented for ${req.url}`)
+            );
+          }
         } catch (E) {
           return res.error(500, E);
         }
