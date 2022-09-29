@@ -3,11 +3,11 @@
 #### Simple , clean , minimalist web framework for Node.js.
 
 ```javascript
-import express from "simple-express";
+import express from "@sanmeet007/simple-express";
 const app = express();
 
 app.get("/", (req, res) => {
-  res.send("Hello World");
+  return res.send("Hello World");
 });
 
 app.listen(3000);
@@ -36,7 +36,4 @@ The Simple-Express's idealogy is to provide small, beginner friendly , robust to
 - `busboy` : For extracting files from the request
 - `ejs` : For rendering different views
 
-#### Developer contact
-
-Please feel free for any queries or disscussion
-Email : ssanmeet123@gmail.com
+[Read full Documentation](https://github.com/Sanmeet007/simple-express/wiki/Documentation)
