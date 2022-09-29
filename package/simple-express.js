@@ -71,7 +71,7 @@ class ExpressResponse extends http.ServerResponse {
    *   }); // params
    * });
    *
-   * @param {String} fileContents
+   * @param {String} contents
    * @param {object} params
    * @param {number} statusCode
    * @param {number=200} statusCode
@@ -80,7 +80,7 @@ class ExpressResponse extends http.ServerResponse {
    *
    * `NOTE` : It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping.
    */
-  render(fileContents, params, statusCode = 200, headers = {}) {}
+  render(contents, params, statusCode = 200, headers = {}) {}
 
   /**
    *
@@ -684,16 +684,11 @@ class Express {
     };
 
     // It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping
-    response.render = (
-      fileContents,
-      params,
-      statusCode = 200,
-      headers = {}
-    ) => {
+    response.render = (contents, params, statusCode = 200, headers = {}) => {
       response.statusCode = statusCode;
       response.setHeaders(headers);
 
-      const data = ejs.render(fileContents, params);
+      const data = ejs.render(contents, params);
       return response.end(data);
     };
 
