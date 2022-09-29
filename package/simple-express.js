@@ -740,7 +740,7 @@ class Express {
         "Content-Type": "text/html",
       }
     ) => {
-      response.statusCode = statusCode;
+      response.writeHead(statusCode);
       response.setHeaders(headers);
       return response.end(string);
     };
