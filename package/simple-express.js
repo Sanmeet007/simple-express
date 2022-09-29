@@ -54,7 +54,6 @@ class ExpressResponse extends http.ServerResponse {
    * @param {object=} errorObject
    * @returns {HTTPResponse}
    *
-   * `NOTE` : You need to edit the response given by the sendFile or send or render etc
    *
    */
   error(errorCode, errorObject = null) {}
@@ -78,7 +77,6 @@ class ExpressResponse extends http.ServerResponse {
    * @param {object=} headers
    * @returns {ExpressResponse} [Returns rendered string and serves the view]
    *
-   * `NOTE` : It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping.
    */
   render(contents, params, statusCode = 200, headers = {}) {}
 
@@ -101,7 +99,6 @@ class ExpressResponse extends http.ServerResponse {
    * @param {object} headers
    * @returns {ExpressResponse} [Renders the whole view and returns the response]
    *
-   *`NOTE` : It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping.
    */
   async renderFile(filePath, params = {}, statusCode = 200, headers = {}) {}
 
@@ -129,7 +126,6 @@ class ExpressResponse extends http.ServerResponse {
      * @param {object} headers
      * @returns {HTTPResponse} Sends the file
      *
-     *`NOTE` : It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping.
      */
   sendFile(filePath, statusCode = 200, headers = {}) {}
 
@@ -148,10 +144,9 @@ class ExpressResponse extends http.ServerResponse {
      * @param {number=200} statusCode
      * @param {object} headers
      * @param {object=} headers
-       * @returns {ExpressResponse} [Sends the file ]
-       *
-       *`NOTE` : It will stop the server if encounters any errors commited by the dev .. Unhandled to prevent any looping.
-       */
+    * @returns {ExpressResponse} [Sends the file ]
+    *
+    */
   send(
     contents,
     statusCode = 200,
@@ -169,7 +164,7 @@ class ExpressResponse extends http.ServerResponse {
    *  return res.json({
    *    "error" : "true"
    *    "message" : "internal server error"
-   *  }, 505);
+   *  }, 500);
    * });
    *
    * @param {object} object
@@ -740,8 +735,9 @@ class Express {
         "Content-Type": "text/html",
       }
     ) => {
-      response.writeHead(statusCode);
-      response.setHeaders(headers);
+      response.writeHead(statusCode, {
+        ...headers,
+      });
       return response.end(string);
     };
 
