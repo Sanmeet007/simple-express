@@ -331,16 +331,140 @@ const matchURL = (
   }
 };
 
-class Express {
+class Uuid {
+  static currrentId = 0;
+}
+
+class ExpressRouter {
+  /** @type  {Array<RequestHandlerObject>}  */
+  /** @protected */ _requests = [];
+
+  /**
+   *
+   * Acts as middleware , can listen to requests or end reponses based on user needs .
+   *
+   * @example
+   *
+   * app.use(async (req, res, next) => {
+   *    const isAdmin = await Authenticate(req.body.user);
+   *    if(!isAdmin) return res.error(403);
+   * });
+   *
+   * app.get("/admin" , ...)
+   *
+   *
+   *
+   * @param {RequestHandler} MiddleWareFunction
+   */
+  use(
+    /** @type {RequestHandler} */
+    func
+  ) {
+    this._requests.push({
+      method: "ANY",
+      url: "",
+      callBack: func,
+      id: ++Uuid.currrentId,
+    });
+  }
+
+  /**
+   * Handles Incoming POST request
+   *
+   * @example
+   * app.post("/", (req, res) => {
+   *  return res.json( {
+   *    "framework" : "express"
+   *  }); // Sends JSON reponse
+   * });
+   *
+   * @param  {String} URLPrefix [matches the url prefix with all other corresponding methods]
+   * @param  {Function} RequestHandler [Handles the request or Acts as middleware which can be used by next()]
+   * @param {Function} Function  [Handles the request from middleware. Must return a response]
+   * @return {HTTPResponse} [Returns valid HTTP response ]
+   *
+   */
+  post(
+    /** @type {URLPrefix} */ url,
+    /** @type {RequestHandler} */ func,
+    /** @type {NextHandler} */ next = null
+  ) {
+    this._requests.push({
+      method: "POST",
+      url: url,
+      callBack: func,
+      next,
+      id: ++Uuid.currrentId,
+    });
+  }
+
+  /**
+   * Handles Incoming GET request
+   * 
+   * @example 
+   * app.get("/", (req, res) => {
+   *  return res.send("Hello world"); // Ends the response
+   * });
+   *
+   * @param  {String} URLPrefix [matches the url prefix with all other corresponding methods]
+   * @param  {Function} RequestHandler [Handles the request or Acts as middleware which can be used by next()]
+   * @param {Function} Function  [Handles the request from middleware. Must return a response]
+   * @return {HTTPResponse} [Returns valid HTTP response ]
+   *
+
+   */
+  get(
+    /** @type {URLPrefix} */ url,
+    /** @type {RequestHandler}*/ func,
+    /** @type {NextHandler} */ next = null
+  ) {
+    this._requests.push({
+      method: "GET",
+      url: url,
+      callBack: func,
+      next,
+      id: ++Uuid.currrentId,
+    });
+  }
+
+  /**
+   * Handles Incoming POST request
+   *
+   * @example
+   * app.post("/", (req, res) => {
+   *  return res.json( {
+   *    "framework" : "express"
+   *  }); // Sends JSON reponse
+   * });
+   *
+   * @param  {String} URLPrefix [matches the url prefix with all other corresponding methods]
+   * @param  {Function} RequestHandler [Handles the request or Acts as middleware which can be used by next()]
+   * @param {(Function|null)} NextHandler  [Handles the request from middleware. Must return a response]
+   * @return {HTTPResponse} [Returns valid HTTP response ]
+   *
+   */
+  route(
+    /** @type {URLPrefix} */ url,
+    /** @type {RequestMethod} */ method,
+    /** @type {RequestHandler} */ func,
+    /** @type {NextHandler} */ next = null
+  ) {
+    if (method == "ANY") throw Error("Method not allowed");
+
+    this._requests.push({
+      method: method,
+      url: url,
+      callBack: func,
+      next,
+      id: ++Uuid.currrentId,
+    });
+  }
+}
+
+class Express extends ExpressRouter {
   #http = http;
   /** @type {HTTPServer} */
   #server = null;
-
-  /** @type {Array<RequestHandlerObject>} */
-  #requests = [];
-
-  /**@type {Number} */
-  #registerId = 0;
 
   /**@type {PortNumber} */
   #port = 3000;
@@ -365,6 +489,10 @@ class Express {
 
   /** @type {boolean} */
   #useTempDir = false;
+
+  constructor() {
+    super();
+  }
 
   /**
    * Sets or Returns the port number for Express server.
@@ -427,7 +555,7 @@ class Express {
     /** @type {Array<URLPath>} */
     const urlPaths = [];
     urlPaths.concat(this.staticFilesURL);
-    this.#requests.forEach((req) => {
+    this._requests.forEach((req) => {
       const toBePushedUrl = `http://${this.host}:${this.port}${req.url}`;
       if (!urlPaths.includes(toBePushedUrl)) {
         urlPaths.push(toBePushedUrl);
@@ -471,16 +599,18 @@ class Express {
    *
    * @param {RequestHandler} MiddleWareFunction
    */
-  use(
-    /** @type {RequestHandler} */
-    func
+  register(
+    /** @type {String}*/ path,
+    /** @type {ExpressRouter} */
+    blueprint
   ) {
-    this.#requests.push({
-      method: "ANY",
-      url: "",
-      callBack: func,
-      id: this.#registerId++,
+    const requests = blueprint._requests.map((x) => {
+      if (x.url === "/") x.url = "";
+      if (x.url.startsWith("/")) x.url = x.url.slice(1);
+      x.url += path;
+      return x;
     });
+    this._requests.push(...requests);
   }
 
   /**
@@ -498,107 +628,12 @@ class Express {
     /** @type {ErrorRequestHandler} */
     func
   ) {
-    this.#requests.push({
+    this._requests.push({
       method: "ERROR",
       url: "",
       callBack: func,
-      id: this.#registerId++,
+      id: ++Uuid.currrentId,
       errorCode,
-    });
-  }
-
-  /**
-   * Handles Incoming GET request
-   * 
-   * @example 
-   * app.get("/", (req, res) => {
-   *  return res.send("Hello world"); // Ends the response
-   * });
-   *
-   * @param  {String} URLPrefix [matches the url prefix with all other corresponding methods]
-   * @param  {Function} RequestHandler [Handles the request or Acts as middleware which can be used by next()]
-   * @param {Function} Function  [Handles the request from middleware. Must return a response]
-   * @return {HTTPResponse} [Returns valid HTTP response ]
-   *
-
-   */
-
-  get(
-    /** @type {URLPrefix} */ url,
-    /** @type {RequestHandler}*/ func,
-    /** @type {NextHandler} */ next = null
-  ) {
-    this.#requests.push({
-      method: "GET",
-      url: url,
-      callBack: func,
-      next,
-      id: this.#registerId++,
-    });
-  }
-
-  /**
-   * Handles Incoming POST request
-   *
-   * @example
-   * app.post("/", (req, res) => {
-   *  return res.json( {
-   *    "framework" : "express"
-   *  }); // Sends JSON reponse
-   * });
-   *
-   * @param  {String} URLPrefix [matches the url prefix with all other corresponding methods]
-   * @param  {Function} RequestHandler [Handles the request or Acts as middleware which can be used by next()]
-   * @param {Function} Function  [Handles the request from middleware. Must return a response]
-   * @return {HTTPResponse} [Returns valid HTTP response ]
-   *
-   */
-
-  post(
-    /** @type {URLPrefix} */ url,
-    /** @type {RequestHandler} */ func,
-    /** @type {NextHandler} */ next = null
-  ) {
-    this.#requests.push({
-      method: "POST",
-      url: url,
-      callBack: func,
-      next,
-      id: this.#registerId++,
-    });
-  }
-
-  /**
-   * Handles Incoming POST request
-   *
-   * @example
-   * app.post("/", (req, res) => {
-   *  return res.json( {
-   *    "framework" : "express"
-   *  }); // Sends JSON reponse
-   * });
-   *
-   * @param  {String} URLPrefix [matches the url prefix with all other corresponding methods]
-   * @param  {Function} RequestHandler [Handles the request or Acts as middleware which can be used by next()]
-   * @param {(Function|null)} NextHandler  [Handles the request from middleware. Must return a response]
-   * @return {HTTPResponse} [Returns valid HTTP response ]
-   *
-   */
-
-  route(
-    /** @type {URLPrefix} */ url,
-    /** @type {RequestMethod} */ method,
-    /** @type {RequestHandler} */ func,
-    /** @type {NextHandler} */ next = null
-  ) {
-    if (method == "ANY") throw Error("Method not allowed");
-
-    this.#requests.push({
-      method: method,
-      url: url,
-      callBack: func,
-      next,
-      id: this.#registerId++,
     });
   }
 
@@ -628,13 +663,13 @@ class Express {
       if (paths.length > 0) {
         paths.forEach((path) => {
           const url = toURLPath(path, this.staticDir);
-          this.#requests.push({
+          this._requests.push({
             method: "GET",
             url,
             callBack: (req, res) => {
               return res.sendFile(path);
             },
-            id: this.#registerId++,
+            id: ++Uuid.currrentId,
           });
         });
       }
@@ -664,7 +699,7 @@ class Express {
         const [req, res] = [request, response];
 
         response.writeHead(errorCode);
-        const errorHandlers = this.#requests.filter(
+        const errorHandlers = this._requests.filter(
           (ec) => ec.errorCode == errorCode
         );
         if (errorHandlers.length > 0) {
@@ -765,7 +800,7 @@ class Express {
           },
         });
 
-        return response.end(JSON.stringify(object));
+        return response.end(JSON.stringify(object, null, 4));
       } catch (E) {
         return response.error(500, E);
       }
@@ -779,7 +814,7 @@ class Express {
         /** @type {ExpressResponse} */ res
       ) => {
         try {
-          const requestHandlers = this.#requests.filter(
+          const requestHandlers = this._requests.filter(
             (el) => el.method != "ERROR"
           );
 
@@ -793,6 +828,7 @@ class Express {
           for (let i = 0; i < requestHandlers.length; i++) {
             const currentRequestHandler = requestHandlers[i];
             const urlMatches = matchURL(req, currentRequestHandler);
+
             if (
               req.method.toLowerCase() ==
                 currentRequestHandler.method.toLowerCase() &&
@@ -947,3 +983,4 @@ const express = () => {
 };
 
 module.exports = express;
+module.exports.Router = ExpressRouter;
