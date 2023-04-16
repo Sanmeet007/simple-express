@@ -1,5 +1,3 @@
-// TODO : Fix req param
-
 const bodyParser = require("./utils/body-parser.js");
 const http = require("http");
 const ejs = require("ejs");
