@@ -582,20 +582,29 @@ class Express extends ExpressRouter {
 
   /**
    *
-   * Acts as middleware , can listen to requests or end reponses based on user needs .
+   * Creates a new router object. Used for making code modular.
    *
    * @example
    *
-   * app.use(async (req, res, next) => {
-   *    const isAdmin = await Authenticate(req.body.user);
-   *    if(!isAdmin) return res.error(403);
+   *
+   * // api.js
+   * import {Router} from "@sanmeet007/simple-express";
+   * router.get("/", (req , res) =>{
+   *     return res.json({
+   *      "message" : "API is working correctly."
+   *    });
    * });
    *
-   * app.get("/admin" , ...)
+   * export default router;
+   *
+   * // server.js
+   *
+   * import ApiRoutes from "./api.js";
+   * app.register("/api" , ApiRoutes);
    *
    *
-   *
-   * @param {RequestHandler} MiddleWareFunction
+   * @param {String} path
+   * @param {ExpressRouter} blueprint
    */
   register(
     /** @type {String}*/ path,
