@@ -1,4 +1,4 @@
-import express from "../package/simple-express.js";
+import express from "@sanmeet007/simple-express";
 import ApiRoutes from "./routes/api.js";
 import HomeRoutes from "./routes/home.js";
 
