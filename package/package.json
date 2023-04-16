@@ -1,6 +1,6 @@
 {
   "name": "@sanmeet007/simple-express",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "description": "Simple-Express is a minimal and flexible Node.js web application framework provides beginner friendly user experience.",
   "main": "simple-express.js",
   "repository": {
