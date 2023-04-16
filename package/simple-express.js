@@ -1,3 +1,5 @@
+// TODO : Fix req param
+
 const bodyParser = require("./utils/body-parser.js");
 const http = require("http");
 const ejs = require("ejs");
@@ -296,7 +298,6 @@ const matchURL = (
 ) => {
   const req_url = req.url;
   const match_url = match.url;
-
   if (req_url == match_url) {
     return true;
   } else if (wildCardCheck(req, match)) {
@@ -304,25 +305,28 @@ const matchURL = (
   } else {
     if (match_url.includes(":")) {
       try {
-        let m;
-        const final_object = {};
-        const req_result = req_url
-          .split("/")
-          .filter((x) => x != "")
-          .map((x) => decodeURIComponent(x));
-
-        const match_exp = /\/:(?<p>\w+)/gm;
-        const match_result = [];
-        while ((m = match_exp.exec(match_url))) {
-          match_result.push(m.groups.p);
+        if (req_url.endsWith("/")) {
+          req_url = req_url.substring(0, req_url.length - 1);
         }
 
-        if (match_result.length == req_result.length) {
-          match_result.forEach((k, i) => (final_object[k] = req_result[i]));
-          req.params = {};
-          Object.assign(req.params, final_object);
-          return true;
+        if (match_url.endsWith("/")) {
+          match_url = match_url.substring(0, match_url.length - 1);
         }
+
+        const req_arr = req_url.split("/");
+        const match_arr = match_url.split("/");
+        if (req_arr.length != match_arr.length) return false;
+
+        const obj = {};
+        req_arr.forEach((c, i) => {
+          if (c != match_arr[i]) {
+            obj[match_arr[i].substring(1)] = c;
+          }
+        });
+
+        req.params = obj;
+
+        return true;
       } catch (E) {
         return false;
       }
@@ -490,10 +494,6 @@ class Express extends ExpressRouter {
   /** @type {boolean} */
   #useTempDir = false;
 
-  constructor() {
-    super();
-  }
-
   /**
    * Sets or Returns the port number for Express server.
    * @type {PortNumber}
@@ -606,8 +606,7 @@ class Express extends ExpressRouter {
   ) {
     const requests = blueprint._requests.map((x) => {
       if (x.url === "/") x.url = "";
-      if (x.url.startsWith("/")) x.url = x.url.slice(1);
-      x.url += path;
+      x.url = path + x.url;
       return x;
     });
     this._requests.push(...requests);
