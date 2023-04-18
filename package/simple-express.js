@@ -2,6 +2,7 @@ const bodyParser = require("./utils/body-parser.js");
 const http = require("http");
 const ejs = require("ejs");
 const fs = require("fs");
+const fsMethods = require("./utils/fs-methods.js");
 
 class RequestHandlerObject {
   /** @type {Number}*/
@@ -229,117 +230,90 @@ class ExpressRequest extends http.IncomingMessage {
  *
  */
 
-const ls = (staticDirectoryPath) => {
-  const staticPaths = [];
-  const listPaths = (dirPath) => {
-    const dirs = fs.readdirSync(dirPath);
-    dirs.forEach((path) => {
-      const current_path = dirPath + "/" + path;
-      const lst = fs.lstatSync(current_path);
-      if (lst.isDirectory()) {
-        listPaths(current_path);
-      } else {
-        staticPaths.push(current_path);
-      }
-    });
-  };
-
-  listPaths(staticDirectoryPath);
-  return staticPaths;
-};
-
-const toURLPath = (path, dirPath) => {
-  path = path.replace(dirPath, "");
-  return path;
-};
-
 /**
- *
- * @param {HTTPRequest} Request [Client request]
- * @param {RequestHandlerObject} RequestHandlerObject [Client request matcher]
- * @returns {Boolean} [returns true if the req.url == math.url]
+ * @typedef MatchObject
+ * @prop {object} params
+ * @prop {object} query
  */
-const wildCardCheck = (
-  /**@type {HTTPRequest} */ req,
-  /**@type {RequestHandlerObject} */ match
-) => {
-  const req_url = req.url;
-  const match_url = match.url;
-  try {
-    const path = req_url.split("/").filter((x) => x != "");
-    const last_path = path[path.length - 1];
-    if (last_path[0] == "?") {
-      const real_path = req_url.replace(last_path, "");
-      if (real_path == match_url) {
-        const url = new URL("http://example.com/" + last_path);
 
-        req.query = Object.fromEntries(url.searchParams);
+class UrlMatcher {
+  #params = {};
+  #query = {};
+  #ismatch = false;
 
-        return true;
-      }
+  constructor(
+    /** @type {string} */
+    req_url,
+    /** @type {string} */
+    match_url
+  ) {
+    if (
+      req_url === null ||
+      req_url === undefined ||
+      match_url === undefined ||
+      match_url === null
+    ) {
+      throw Error("Request URL or Match URL can't be empty");
     }
-    return false;
-  } catch (_) {
-    return false;
-  }
-};
+    const url = new URL(req_url.trim(), "https://example.com");
+    const query = Object.fromEntries(url.searchParams);
+    this.#query = query;
 
-/**
- *
- * @param {HTTPRequest} Request [Client request]
- * @param {RequestHandlerObject} RequestHandlerObject [Client request matcher]
- * @returns {Boolean} [returns true if the req.url == math.url]
- */
-const matchURL = (
-  /** @type {HTTPRequest} */ req,
-  /**  @type {RequestHandlerObject}*/ match
-) => {
-  const req_url = req.url;
-  const match_url = match.url;
-  if (req_url == match_url) {
-    return true;
-  } else if (wildCardCheck(req, match)) {
-    return true;
-  } else {
-    if (match_url.includes(":")) {
-      try {
-        if (req_url.endsWith("/")) {
-          req_url = req_url.substring(0, req_url.length - 1);
-        }
+    if (url.pathname.endsWith("/"))
+      url.pathname = url.pathname.slice(0, url.pathname.length - 1);
 
-        if (match_url.endsWith("/")) {
-          match_url = match_url.substring(0, match_url.length - 1);
-        }
+    const matchArray = match_url.trim().split("/");
+    const reqArray = url.pathname.split("/");
+    const objectArr = [];
+    let wasBreak = false;
 
-        const req_arr = req_url.split("/");
-        const match_arr = match_url.split("/");
-        if (req_arr.length != match_arr.length) return false;
-
-        const obj = {};
-        req_arr.forEach((c, i) => {
-          if (c != match_arr[i]) {
-            obj[match_arr[i].substring(1)] = c;
+    if (matchArray.length === reqArray.length) {
+      for (let i = 0; i < matchArray.length; i++) {
+        if (matchArray[i] !== reqArray[i]) {
+          if (matchArray[i].startsWith(":")) {
+            const key = matchArray[i].slice(1);
+            const value = reqArray[i];
+            objectArr.push([key, value]);
+          } else {
+            this.#ismatch = false;
+            wasBreak = true;
+            break;
           }
-        });
-
-        req.params = obj;
-
-        return true;
-      } catch (E) {
-        return false;
+        }
       }
+      if (!wasBreak) {
+        this.#params = Object.fromEntries(objectArr);
+        this.#ismatch = true;
+      }
+    } else {
+      this.#ismatch = false;
     }
-    return false;
   }
-};
+
+  /** @returns  {boolean} */
+  isMatch() {
+    return this.#ismatch;
+  }
+
+  /** @returns {MatchObject} */
+  getObject() {
+    return {
+      params: this.#params,
+      query: this.#query,
+    };
+  }
+}
 
 class Uuid {
   static currrentId = 0;
 }
 
 class ExpressRouter {
-  /** @type  {Array<RequestHandlerObject>}  */
-  /** @protected */ _requests = [];
+  /**
+   * @type  {Array<RequestHandlerObject>}
+   * @protected
+   */
+  _requests = [];
 
   /**
    *
@@ -652,7 +626,7 @@ class Express extends ExpressRouter {
   }
 
   #addStaticPaths() {
-    const staticPaths = ls(this.#staticDirPath);
+    const staticPaths = fsMethods.ls(this.#staticDirPath);
     this.#staticPaths = staticPaths;
     return staticPaths;
   }
@@ -668,7 +642,7 @@ class Express extends ExpressRouter {
     try {
       if (paths.length > 0) {
         paths.forEach((path) => {
-          const url = toURLPath(path, this.staticDir);
+          const url = fsMethods.toURLPath(path, this.staticDir);
           this._requests.push({
             method: "GET",
             url,
@@ -833,7 +807,16 @@ class Express extends ExpressRouter {
 
           for (let i = 0; i < requestHandlers.length; i++) {
             const currentRequestHandler = requestHandlers[i];
-            const urlMatches = matchURL(req, currentRequestHandler);
+
+            const matcherObject = new UrlMatcher(
+              req.url,
+              currentRequestHandler.url
+            );
+            const urlMatches = matcherObject.isMatch();
+            const matchObjectDetails = matcherObject.getObject();
+
+            req.params = matchObjectDetails.params;
+            req.query = matchObjectDetails.query;
 
             if (
               req.method.toLowerCase() ==
