@@ -21,8 +21,16 @@ router.post("/", (req, res) => {
 });
 
 router.get("/", (req, res) => {
-  if (req.query) console.log("GET data : ", req.query); // wildcard urls
   return res.sendFile("public/index.html");
+});
+
+router.get("/test", (req, res) => {
+  // Example :  http://localhost:2000/test/?q=Hello%20World
+
+  const query = req.query.q;
+  return res.renderFile("index.ejs", {
+    q: query ?? "",
+  });
 });
 
 export default router;
