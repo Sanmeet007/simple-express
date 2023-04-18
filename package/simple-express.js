@@ -949,14 +949,13 @@ class Express extends ExpressRouter {
    * callback. This listen for the requests and reponses for the same.
    */
 
-  listen(port = 3000, host = "localhost", cb = null) {
+  listen(port = 3000, host = null, cb = null) {
     try {
       this.#createServerAndHandleRequests();
       return this.#server.listen(port, host, (e) => {
         this.#port = port;
         this.#dhost = host;
         if (typeof port != "number") throw Error("Invalid port number");
-        console.log(`Server started at : http://${this.host}:${this.port}`);
         if (typeof cb == "function") cb(e);
       });
     } catch (E) {
