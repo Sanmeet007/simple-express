@@ -669,7 +669,7 @@ class Express extends ExpressRouter {
       });
     };
 
-    response.error = (errorCode, errorObject = null) => {
+    response.error = (errorCode, /** @type {Error?} */ errorObject = null) => {
       try {
         if (errorCode == null || errorCode == undefined) {
           errorCode = 500;
@@ -685,11 +685,11 @@ class Express extends ExpressRouter {
         if (errorHandlers.length > 0) {
           return errorHandlers[0].callBack(req, res, errorObject);
         } else {
-          if (errorObject != null) console.log(errorObject);
+          if (errorObject != null) console.error(errorObject);
         }
         return response.end();
       } catch (E) {
-        console.warn(E);
+        console.warn(E.message);
         response.writeHead(500);
         return response.end();
       }
@@ -926,12 +926,9 @@ class Express extends ExpressRouter {
           }
 
           if (req.method.toLowerCase() == "get") {
-            return res.error(404, Error(`Not found - ${req.url}`));
+            return res.error(404);
           } else {
-            return res.error(
-              501,
-              Error(`${req.method} - method not implemented for ${req.url}`)
-            );
+            return res.error(501);
           }
         } catch (E) {
           return res.error(500, E);
