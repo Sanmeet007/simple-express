@@ -586,7 +586,7 @@ class Express extends ExpressRouter {
     blueprint
   ) {
     const requests = blueprint._requests.map((x) => {
-      if (x.url === "/") x.url = "";
+      if (x.url.startsWith("/")) x.url = x.url.slice(1);
       x.url = path + x.url;
       return x;
     });
